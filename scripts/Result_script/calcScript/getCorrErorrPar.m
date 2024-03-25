@@ -31,7 +31,7 @@ function [storeRes1,storeRes2,storeRes3,storeRes4,storeXX]=getCorrErorrPar(model
         f(NFind)=-1;
         f(PNFind)=-1;
         model_tmp.f=f;
-        sol=solveTFBAmodel(model_tmp);
+        sol=solveTFBAmodel(model_tmp,false,'gurobi');
         if isempty(sol.x)
             storeRes1(eId)=nan;
             storeRes2(eId)=nan;

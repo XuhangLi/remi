@@ -67,29 +67,26 @@ if (strcmp(solver,'gurobi'))
         vtypes = strcat(vtypes,tModel.vartypes{i,1});
     end
     
-    if 1%nargin < 4
+    if nargin < 4
         clear opts
         %opts.IterationLimit = 10000;
         opts.FeasibilityTol = 1e-9;
         opts.IntFeasTol = 1e-9;
         opts.OptimalityTol = 1e-9;
-        opts.TimeLimit = 7200;
-        opts.MIPGap = 1e-12;
+        % opts.Method = 1; % 0 - primal, 1 - dual
         opts.Presolve = -1; % -1 - auto, 0 - no, 1 - conserv, 2 - aggressive
-        opts.OutputFlag = 1; %or 1
-        opts.DisplayInterval = 1; %or 5
+        opts.Display = 1;
+        opts.DisplayInterval = 1;
+        opts.OutputFlag = 0;
         %opts.LogFile = [tModel.description '.log'];
-        opts.LogFile = [tModel.description '.lp'];
+        opts.WriteToFile = [tModel.description '.lp'];
     end
-    if tModel.objtype == -1
-        osense = 'max';
-    else
-        osense = 'min';
+    
+    [x,val,exitflag,output] = gurobi_mex(tModel.f,tModel.objtype,sparse(tModel.A),tModel.rhs,contypes,tModel.var_lb,tModel.var_ub,vtypes,opts);
+    
+    if (abs(val) < opts.IntFeasTol)
+        val = 0;
     end
-    [MILPproblem.A,MILPproblem.rhs,MILPproblem.obj,MILPproblem.sense,MILPproblem.vtype,MILPproblem.modelsense,MILPproblem.lb,MILPproblem.ub] = deal(sparse(tModel.A),tModel.rhs,double(tModel.f),contypes,vtypes,osense,tModel.var_lb,tModel.var_ub);
-
-    [result] = gurobi(MILPproblem,opts);
-    x=result;
 elseif (strcmp(solver,'gurobi_direct'))
     % convert contypes and vtypes into the right format
     for i=1:num_constr
@@ -274,7 +271,9 @@ if ~isempty(x)
     
     if (strcmp(solver,'gurobi'))
         sol.x = x;
-        sol.exitflag = x.status;
+        sol.val = val;
+        sol.exitflag = exitflag;
+        sol.output = output;
     elseif (strcmp(solver,'gurobi_direct'))
         sol.x=result.x;
         sol.val=result.objval;
@@ -299,13 +298,13 @@ if ~isempty(x)
     end
     
     % disp('Solution:');disp(x')
-    disp('Optimal obj value:');disp(x.objval);
+    disp('Optimal obj value:');disp(sol.val);
     %disp('Exit flag:');disp(exitflag)
     %disp('Optimization info:');disp(output);
     
-    if 0%(printall) && ~isempty(x)
+    if (printall) && ~isempty(x)
         
-        %printLPformat(tModel);
+        printLPformat(tModel);
         
         EXCELfilename = [tModel.description '_sol.xls'];
         SheetData{1} = 'variables.txt';

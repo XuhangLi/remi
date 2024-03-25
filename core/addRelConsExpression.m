@@ -8,7 +8,7 @@ function [coM]=addRelConsExpression(model1,model2,regRxns,regRatio)
     %% parameters 
     para.bigM=100000;
     para.eps=0.00001;
-    para.basal=0.0025;%0.0001;
+    para.basal=0.001;%0.0001;
     %%
     % now we are going to add two models whereas one represent condition1
     % and another represents condition2 
